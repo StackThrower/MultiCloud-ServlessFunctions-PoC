@@ -54,3 +54,7 @@ environment_variables:
   plaintext:
     JAVA_HOME: /usr/lib/jvm/java-17-openjdk
     MAVEN_OPTS: "-Xmx1024m -Xms512m"
+
+environment:
+  computeType: BUILD_GENERAL1_SMALL
+  image: aws/codebuild/standard:7.0
