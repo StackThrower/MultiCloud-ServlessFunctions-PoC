@@ -43,12 +43,12 @@ resource "aws_lambda_function" "lambda_service" {
   publish = true
 }
 
-data "aws_lambda_function_url" "lambda_url_existing" {
+data "aws_lambda_function_url" "lambda_url" {
   function_name = aws_lambda_function.lambda_service.function_name
 }
 
 resource "aws_lambda_function_url" "lambda_url" {
-  count = length(try(data.aws_lambda_function_url.lambda_url_existing.url_id, "")) > 0 ? 0 : 1
+  count = length(try(data.aws_lambda_function_url.lambda_url.function_name, "")) > 0 ? 0 : 1
   function_name      = aws_lambda_function.lambda_service.function_name
   authorization_type = "NONE"
 
@@ -65,7 +65,7 @@ resource "aws_lambda_function_url" "lambda_url" {
 output "lambda_url" {
   description = "The URL to invoke the Lambda function"
   value = coalesce(
-    try(data.aws_lambda_function_url.lambda_url_existing.function_url, null),
+    try(data.aws_lambda_function_url.lambda_url.function_url, null),
     try(aws_lambda_function_url.lambda_url[0].function_url, null)
   )
 }
