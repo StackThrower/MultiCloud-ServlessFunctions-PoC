@@ -26,8 +26,8 @@ resource "aws_lambda_function" "lambda_service" {
   role          = aws_iam_role.lambda_exec.arn
   handler       = var.handler
   runtime       = var.runtime
-  filename      = var.filename
-  source_code_hash = filebase64sha256(var.filename)
+  filename      = "${path.module}/../../target/lambda-service.jar"
+  source_code_hash = filebase64sha256("${path.module}/../../target/lambda-service.jar")
   timeout       = var.timeout
   memory_size   = var.memory_size
   environment {
@@ -42,9 +42,7 @@ variable "aws_region" { default = "us-east-1" }
 variable "function_name" { default = "lambda-service" }
 variable "handler" { default = "com.example.Handler::handleRequest" }
 variable "runtime" { default = "java17" }
-variable "filename" { default = "../target/lambda-service.jar" }
 variable "timeout" { default = 30 }
 variable "memory_size" { default = 512 }
 variable "environment_variables" { default = { SPRING_PROFILES_ACTIVE = "lambda" } }
 variable "tracing_mode" { default = "Active" }
-
