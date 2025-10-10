@@ -48,7 +48,7 @@ data "aws_lambda_function_url" "lambda_url_existing" {
 }
 
 resource "aws_lambda_function_url" "lambda_url" {
-  count = length(try(data.aws_lambda_function_url.lambda_url_existing.function_name, "")) > 0 ? 0 : 1
+  count = length(try(data.aws_lambda_function_url.lambda_url_existing.url_id, "")) > 0 ? 0 : 1
   function_name      = aws_lambda_function.lambda_service.function_name
   authorization_type = "NONE"
 
