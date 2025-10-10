@@ -2,28 +2,32 @@ provider "aws" {
   region = var.aws_region
 }
 
-resource "aws_iam_role" "lambda_exec" {
+  # resource "aws_iam_role" "lambda_exec" {
+  #   name = "lambda_exec_role"
+  #   assume_role_policy = jsonencode({
+  #     Version = "2012-10-17"
+  #     Statement = [{
+  #       Action = "sts:AssumeRole"
+  #       Effect = "Allow"
+  #       Principal = {
+  #         Service = "lambda.amazonaws.com"
+  #       }
+  #     }]
+  #   })
+  # }
+
+data "aws_iam_role" "lambda_exec" {
   name = "lambda_exec_role"
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Action = "sts:AssumeRole"
-      Effect = "Allow"
-      Principal = {
-        Service = "lambda.amazonaws.com"
-      }
-    }]
-  })
 }
 
 resource "aws_iam_role_policy_attachment" "lambda_policy" {
-  role       = aws_iam_role.lambda_exec.name
+  role       = data.aws_iam_role.lambda_exec.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
 resource "aws_lambda_function" "lambda_service" {
   function_name = var.function_name
-  role          = aws_iam_role.lambda_exec.arn
+  role          = data.aws_iam_role.lambda_exec.arn
   handler       = var.handler
   runtime       = var.runtime
   filename      = "${path.module}/../../target/lambda-service.jar"
@@ -36,6 +40,7 @@ resource "aws_lambda_function" "lambda_service" {
   tracing_config {
     mode = var.tracing_mode
   }
+  publish = true
 }
 
 resource "aws_lambda_function_url" "lambda_service_url" {
