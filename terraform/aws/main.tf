@@ -43,7 +43,7 @@ resource "aws_lambda_function" "lambda_service" {
   publish = true
 }
 
-data "aws_lambda_function_url" "lambda_service_url" {
+resource "aws_lambda_function_url" "lambda_service_url" {
   function_name      = aws_lambda_function.lambda_service.function_name
   authorization_type = "NONE"
 
@@ -55,11 +55,14 @@ data "aws_lambda_function_url" "lambda_service_url" {
     expose_headers    = ["keep-alive", "date"]
     max_age           = 86400
   }
+  lifecycle {
+    ignore_changes = [function_name, authorization_type]
+  }
 }
 
 output "lambda_function_url" {
   description = "The URL to invoke the Lambda function"
-  value       = data.aws_lambda_function_url.lambda_service_url.function_url
+  value       = aws_lambda_function_url.lambda_service_url.function_url
 }
 
 variable "aws_region" { default = "us-east-1" }
