@@ -59,7 +59,7 @@ data "aws_lambda_function_url" "lambda_service_url" {
 
 output "lambda_function_url" {
   description = "The URL to invoke the Lambda function"
-  value       = aws_lambda_function_url.lambda_service_url.function_url
+  value       = data.aws_lambda_function_url.lambda_service_url.function_url
 }
 
 variable "aws_region" { default = "us-east-1" }
