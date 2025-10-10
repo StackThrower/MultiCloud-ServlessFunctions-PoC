@@ -43,7 +43,7 @@ resource "aws_lambda_function" "lambda_service" {
   publish = true
 }
 
-resource "aws_lambda_function_url" "lambda_service_url" {
+data "aws_lambda_function_url" "lambda_service_url" {
   function_name      = aws_lambda_function.lambda_service.function_name
   authorization_type = "NONE"
 
@@ -59,7 +59,7 @@ resource "aws_lambda_function_url" "lambda_service_url" {
 
 output "lambda_function_url" {
   description = "The URL to invoke the Lambda function"
-  value       = aws_lambda_function_url.lambda_service_url.function_url
+  value       = data.aws_lambda_function_url.lambda_service_url.function_url
 }
 
 variable "aws_region" { default = "us-east-1" }
