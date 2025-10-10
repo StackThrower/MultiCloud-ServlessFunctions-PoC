@@ -43,7 +43,7 @@ resource "aws_lambda_function" "lambda_service" {
   publish = true
 }
 
-resource "aws_lambda_function_url" "lambda_service_url" {
+data "aws_lambda_function_url" "lambda_service_url" {
   function_name      = aws_lambda_function.lambda_service.function_name
   authorization_type = "NONE"
 
@@ -54,9 +54,6 @@ resource "aws_lambda_function_url" "lambda_service_url" {
     allow_headers     = ["date", "keep-alive", "content-type"]
     expose_headers    = ["keep-alive", "date"]
     max_age           = 86400
-  }
-  lifecycle {
-    ignore_changes = [function_name, authorization_type]
   }
 }
 
