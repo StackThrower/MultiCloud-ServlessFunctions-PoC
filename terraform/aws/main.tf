@@ -26,8 +26,8 @@ resource "aws_lambda_function" "lambda_service" {
   role          = aws_iam_role.lambda_exec.arn
   handler       = var.handler
   runtime       = var.runtime
-  filename      = "${path.module}/../../target/lambda-service.jar"
-  source_code_hash = filebase64sha256("${path.module}/../../target/lambda-service.jar")
+  filename      = "/target/lambda-service.jar"
+  source_code_hash = filebase64sha256("/target/lambda-service.jar")
   timeout       = var.timeout
   memory_size   = var.memory_size
   environment {
