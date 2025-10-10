@@ -43,23 +43,30 @@ resource "aws_lambda_function" "lambda_service" {
   publish = true
 }
 
-data "aws_lambda_function_url" "lambda_service_url" {
+resource "aws_lambda_function_url" "lambda_service_url" {
   function_name      = aws_lambda_function.lambda_service.function_name
-  # authorization_type = "NONE"
+  authorization_type = "NONE"
 
-  # cors {
-  #   allow_credentials = true
-  #   allow_origins     = ["*"]
-  #   allow_methods     = ["*"]
-  #   allow_headers     = ["date", "keep-alive", "content-type"]
-  #   expose_headers    = ["keep-alive", "date"]
-  #   max_age           = 86400
-  # }
+  cors {
+    allow_credentials = true
+    allow_origins     = ["*"]
+    allow_methods     = ["*"]
+    allow_headers     = ["date", "keep-alive", "content-type"]
+    expose_headers    = ["keep-alive", "date"]
+    max_age           = 86400
+  }
+
+  lifecycle {
+    create_before_destroy = true
+    ignore_changes = [
+      qualifier
+    ]
+  }
 }
 
 output "lambda_function_url" {
   description = "The URL to invoke the Lambda function"
-  value       = data.aws_lambda_function_url.lambda_service_url.function_url
+  value       = aws_lambda_function_url.lambda_service_url.function_url
 }
 
 variable "aws_region" { default = "us-east-1" }
