@@ -21,14 +21,13 @@ resource "aws_iam_role_policy_attachment" "lambda_policy" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-
 resource "aws_lambda_function" "lambda_service" {
   function_name = var.function_name
   role          = aws_iam_role.lambda_exec.arn
   handler       = var.handler
   runtime       = var.runtime
-  filename      = "/home/runner/work/MultiCloud-ServlessFunctions-PoC/MultiCloud-ServlessFunctions-PoC/target/lambda-service.jar"
-  source_code_hash = filebase64sha256("/home/runner/work/MultiCloud-ServlessFunctions-PoC/MultiCloud-ServlessFunctions-PoC/target/lambda-service.jar")
+  filename      = "${path.module}/../../target/lambda-service.jar"
+  source_code_hash = filebase64sha256("${path.module}/../../target/lambda-service.jar")
   timeout       = var.timeout
   memory_size   = var.memory_size
   environment {
@@ -37,6 +36,25 @@ resource "aws_lambda_function" "lambda_service" {
   tracing_config {
     mode = var.tracing_mode
   }
+}
+
+resource "aws_lambda_function_url" "lambda_service_url" {
+  function_name      = aws_lambda_function.lambda_service.function_name
+  authorization_type = "NONE"
+
+  cors {
+    allow_credentials = true
+    allow_origins     = ["*"]
+    allow_methods     = ["*"]
+    allow_headers     = ["date", "keep-alive", "content-type"]
+    expose_headers    = ["keep-alive", "date"]
+    max_age           = 86400
+  }
+}
+
+output "lambda_function_url" {
+  description = "The URL to invoke the Lambda function"
+  value       = aws_lambda_function_url.lambda_service_url.function_url
 }
 
 variable "aws_region" { default = "us-east-1" }
