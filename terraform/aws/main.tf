@@ -21,13 +21,14 @@ resource "aws_iam_role_policy_attachment" "lambda_policy" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
+
 resource "aws_lambda_function" "lambda_service" {
   function_name = var.function_name
   role          = aws_iam_role.lambda_exec.arn
   handler       = var.handler
   runtime       = var.runtime
-  filename      = "/target/lambda-service.jar"
-  source_code_hash = filebase64sha256("/target/lambda-service.jar")
+  filename      = "/home/runner/work/MultiCloud-ServlessFunctions-PoC/MultiCloud-ServlessFunctions-PoC/target/lambda-service.jar"
+  source_code_hash = filebase64sha256("/home/runner/work/MultiCloud-ServlessFunctions-PoC/MultiCloud-ServlessFunctions-PoC/target/lambda-service.jar")
   timeout       = var.timeout
   memory_size   = var.memory_size
   environment {
