@@ -21,6 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       JAR_PATH: target/lambda-service.jar
+      CLOUD_PROVIDER: ${{ github.event.inputs.cloud || 'aws' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -32,18 +33,45 @@ jobs:
           distribution: 'temurin'
 
       - name: Build with Maven
-        run: mvn clean package -DskipTests -P${{ github.event.inputs.cloud }}
+        run: mvn clean package -DskipTests -P${{ env.CLOUD_PROVIDER }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
+      - name: Configure AWS Credentials
+        if: env.CLOUD_PROVIDER == 'aws'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Check and Import Existing AWS Resources
+        if: env.CLOUD_PROVIDER == 'aws'
+        working-directory: terraform/${{ env.CLOUD_PROVIDER }}
+        run: |
+          # Initialize Terraform
+          terraform init
+          
+          # Import IAM role if exists
+          if aws iam get-role --role-name lambda_exec_role 2>/dev/null; then
+            echo "IAM role exists, checking if in state..."
+            terraform import aws_iam_role.lambda_exec lambda_exec_role 2>/dev/null || echo "Already in state or import failed"
+          fi
+          
+          # Import Lambda function if exists
+          if aws lambda get-function --function-name lambda-service 2>/dev/null; then
+            echo "Lambda function exists, checking if in state..."
+            terraform import aws_lambda_function.lambda_service lambda-service 2>/dev/null || echo "Already in state or import failed"
+          fi
+
       - name: Terraform Init
         run: terraform init
-        working-directory: terraform/${{ github.event.inputs.cloud }}
+        working-directory: terraform/${{ env.CLOUD_PROVIDER }}
 
-      - name: Terraform Apply
-        run: terraform apply -auto-approve
-        working-directory: terraform/${{ github.event.inputs.cloud }}
+      - name: Terraform Plan
+        run: terraform plan
+        working-directory: terraform/${{ env.CLOUD_PROVIDER }}
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -53,3 +81,29 @@ jobs:
           ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           GOOGLE_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
           GOOGLE_PROJECT: ${{ secrets.GCP_PROJECT }}
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve
+        working-directory: terraform/${{ env.CLOUD_PROVIDER }}
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          GOOGLE_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
+          GOOGLE_PROJECT: ${{ secrets.GCP_PROJECT }}
+
+      - name: Get Lambda Function URL
+        if: env.CLOUD_PROVIDER == 'aws'
+        working-directory: terraform/${{ env.CLOUD_PROVIDER }}
+        run: |
+          FUNCTION_URL=$(terraform output -raw lambda_function_url 2>/dev/null || echo "Not available")
+          echo "### Lambda Function URL" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🚀 Your Lambda function is available at:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "$FUNCTION_URL" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
