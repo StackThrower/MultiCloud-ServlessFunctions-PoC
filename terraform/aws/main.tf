@@ -47,14 +47,14 @@ data "aws_lambda_function_url" "lambda_service_url" {
   function_name      = aws_lambda_function.lambda_service.function_name
   authorization_type = "NONE"
 
-  cors {
-    allow_credentials = true
-    allow_origins     = ["*"]
-    allow_methods     = ["*"]
-    allow_headers     = ["date", "keep-alive", "content-type"]
-    expose_headers    = ["keep-alive", "date"]
-    max_age           = 86400
-  }
+  # cors {
+  #   allow_credentials = true
+  #   allow_origins     = ["*"]
+  #   allow_methods     = ["*"]
+  #   allow_headers     = ["date", "keep-alive", "content-type"]
+  #   expose_headers    = ["keep-alive", "date"]
+  #   max_age           = 86400
+  # }
 }
 
 output "lambda_function_url" {
