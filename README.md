@@ -1,65 +1,204 @@
-# AWS Lambda PoC with Spring Boot and Java 17
+# Multi-Cloud Deployment Guide
 
-This project demonstrates a serverless AWS Lambda function built with Spring Boot and Java 17.
+## Обзор
 
-## Project Structure
+Этот проект поддерживает деплой Java Lambda-функции в три облачных провайдера:
+- **AWS Lambda**
+- **Azure Functions**
+- **Google Cloud Functions**
+
+## Структура проекта
 
 ```
-├── pom.xml                           # Maven configuration with AWS Lambda dependencies
-├── aws-lambda-config.json            # AWS Lambda deployment configuration
-├── src/
-│   ├── main/
-│   │   ├── java/com/example/
-│   │   │   └── Handler.java          # Lambda function handler
-│   │   └── resources/
-│   │       ├── application.properties # Spring Boot configuration
-│   │       └── log4j2.xml            # Logging configuration
-│   └── test/java/com/example/
-│       └── HandlerTest.java          # Unit tests
+├── src/main/java/com/example/
+│   ├── Handler.java          # AWS Lambda handler
+│   ├── AzureHandler.java     # Azure Functions handler
+│   └── GcpHandler.java       # Google Cloud Functions handler
+├── terraform/
+│   ├── aws/main.tf           # Terraform для AWS
+│   ├── azure/main.tf         # Terraform для Azure
+│   └── gcp/main.tf           # Terraform для GCP
+├── .github/workflows/
+│   └── deploy.yml            # GitHub Actions workflow
+└── pom.xml                   # Maven конфигурация с профилями
 ```
 
-## Dependencies
+## Сборка проекта
 
-- **aws-lambda-java-core**: Core AWS Lambda runtime
-- **aws-lambda-java-events**: AWS Lambda event types
-- **aws-lambda-java-log4j2**: Log4j2 integration for Lambda
-- **Spring Boot 3.1.5**: Application framework
-
-## Building the Project
-
-To build the shaded JAR for deployment:
-
+### Для AWS Lambda:
 ```bash
-mvn clean package
+mvn clean package -DskipTests -Paws
 ```
 
-This will create `lambda-service.jar` in the `target/` directory.
+### Для Azure Functions:
+```bash
+mvn clean package -DskipTests -Pazure
+```
 
-## AWS Lambda Configuration
+### Для Google Cloud Functions:
+```bash
+mvn clean package -DskipTests -Pgcp
+```
 
+Собранный jar-файл будет находиться в `target/lambda-service.jar`.
+
+## Деплой через Terraform
+
+### AWS Lambda
+
+1. Перейдите в директорию AWS Terraform:
+```bash
+cd terraform/aws
+```
+
+2. Инициализируйте Terraform:
+```bash
+terraform init
+```
+
+3. Примените конфигурацию:
+```bash
+terraform apply
+```
+
+**Необходимые переменные окружения:**
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+- `AWS_REGION` (по умолчанию: us-east-1)
+
+### Azure Functions
+
+1. Перейдите в директорию Azure Terraform:
+```bash
+cd terraform/azure
+```
+
+2. Инициализируйте Terraform:
+```bash
+terraform init
+```
+
+3. Примените конфигурацию:
+```bash
+terraform apply
+```
+
+**Необходимые переменные окружения:**
+- `ARM_CLIENT_ID`
+- `ARM_CLIENT_SECRET`
+- `ARM_SUBSCRIPTION_ID`
+- `ARM_TENANT_ID`
+
+### Google Cloud Functions
+
+1. Перейдите в директорию GCP Terraform:
+```bash
+cd terraform/gcp
+```
+
+2. Инициализируйте Terraform:
+```bash
+terraform init
+```
+
+3. Примените конфигурацию:
+```bash
+terraform apply -var="project=YOUR_GCP_PROJECT_ID"
+```
+
+**Необходимые переменные окружения:**
+- `GOOGLE_CREDENTIALS` (JSON с credentials)
+- `GOOGLE_PROJECT` (ID проекта GCP)
+
+## GitHub Actions Deployment
+
+### Настройка секретов
+
+В настройках вашего GitHub репозитория добавьте следующие секреты:
+
+#### Для AWS:
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+
+#### Для Azure:
+- `AZURE_CLIENT_ID`
+- `AZURE_CLIENT_SECRET`
+- `AZURE_SUBSCRIPTION_ID`
+- `AZURE_TENANT_ID`
+
+#### Для GCP:
+- `GCP_CREDENTIALS` (содержимое JSON файла с ключом сервисного аккаунта)
+- `GCP_PROJECT` (ID проекта)
+
+### Запуск деплоя
+
+1. Перейдите в раздел **Actions** вашего GitHub репозитория
+2. Выберите workflow **"Deploy Lambda PoC"**
+3. Нажмите **"Run workflow"**
+4. Выберите целевое облако: `aws`, `azure` или `gcp`
+5. Нажмите **"Run workflow"** для запуска
+
+Workflow автоматически:
+1. Соберёт проект с нужным профилем Maven
+2. Инициализирует Terraform для выбранного облака
+3. Задеплоит функцию в выбранное облако
+
+## Различия между облачными провайдерами
+
+### AWS Lambda
 - **Handler**: `com.example.Handler::handleRequest`
-- **Runtime**: Java 17
-- **Memory**: 512 MB
-- **Timeout**: 30 seconds
+- **Runtime**: `java17`
+- **Формат**: Использует AWS Lambda API (`RequestHandler`)
 
-## Deployment
+### Azure Functions
+- **Handler**: `com.example.AzureHandler`
+- **Runtime**: Java 17 на Linux
+- **Формат**: Использует Azure Functions API (`HttpRequestMessage`, `ExecutionContext`)
 
-1. Build the project: `mvn clean package`
-2. Upload `target/lambda-service.jar` to AWS Lambda
-3. Configure the function using settings from `aws-lambda-config.json`
+### Google Cloud Functions
+- **Entry Point**: `com.example.GcpHandler`
+- **Runtime**: `java17`
+- **Формат**: Использует Google Cloud Functions API (`HttpFunction`)
 
-## Testing
+## Кастомизация
 
-Run unit tests:
+### Изменение параметров функции
+
+Отредактируйте файлы `terraform/*/main.tf` для изменения:
+- Памяти (memory_size)
+- Таймаута (timeout)
+- Переменных окружения (environment_variables)
+- Региона деплоя
+
+### Добавление зависимостей
+
+Добавьте зависимости в `pom.xml` в секцию `<dependencies>`.
+
+## Удаление ресурсов
+
+Для удаления задеплоенных ресурсов выполните в соответствующей директории terraform:
 
 ```bash
-mvn test
+terraform destroy
 ```
 
-## Local Testing
+## Troubleshooting
 
-The Handler class includes a main method for local Spring Boot execution:
+### Проблема: Классы не найдены в jar-файле
+**Решение**: Убедитесь, что maven-shade-plugin правильно настроен и включает все классы.
 
-```bash
-mvn spring-boot:run
-```
+### Проблема: Terraform не может найти credentials
+**Решение**: Проверьте, что все необходимые переменные окружения установлены.
+
+### Проблема: Функция не запускается в облаке
+**Решение**: Проверьте логи в консоли облачного провайдера:
+- AWS: CloudWatch Logs
+- Azure: Application Insights / Log Stream
+- GCP: Cloud Logging
+
+## Дополнительная информация
+
+- [AWS Lambda Java Documentation](https://docs.aws.amazon.com/lambda/latest/dg/java-handler.html)
+- [Azure Functions Java Developer Guide](https://docs.microsoft.com/azure/azure-functions/functions-reference-java)
+- [Google Cloud Functions Java Runtime](https://cloud.google.com/functions/docs/concepts/java-runtime)
+

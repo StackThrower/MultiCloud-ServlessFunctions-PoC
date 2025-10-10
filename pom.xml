@@ -60,6 +60,20 @@
             <version>1.5.1</version>
         </dependency>
 
+        <!-- Azure Functions Java Library -->
+        <dependency>
+            <groupId>com.microsoft.azure.functions</groupId>
+            <artifactId>azure-functions-java-library</artifactId>
+            <version>3.0.0</version>
+        </dependency>
+
+        <!-- Google Cloud Functions Framework -->
+        <dependency>
+            <groupId>com.google.cloud.functions</groupId>
+            <artifactId>functions-framework-api</artifactId>
+            <version>1.0.4</version>
+        </dependency>
+
         <!-- Test Dependencies -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -67,6 +81,30 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <profiles>
+        <profile>
+            <id>aws</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <mainClass>com.example.Handler</mainClass>
+            </properties>
+        </profile>
+        <profile>
+            <id>azure</id>
+            <properties>
+                <mainClass>com.example.AzureHandler</mainClass>
+            </properties>
+        </profile>
+        <profile>
+            <id>gcp</id>
+            <properties>
+                <mainClass>com.example.GcpHandler</mainClass>
+            </properties>
+        </profile>
+    </profiles>
 
     <build>
         <plugins>
@@ -94,7 +132,7 @@
                             <finalName>lambda-service</finalName>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>com.example.Handler</mainClass>
+                                    <mainClass>${mainClass}</mainClass>
                                 </transformer>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
                                     <resource>META-INF/spring.handlers</resource>
