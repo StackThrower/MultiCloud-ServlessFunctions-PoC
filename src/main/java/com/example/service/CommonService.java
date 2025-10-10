@@ -9,7 +9,7 @@ public class CommonService {
 
     public String processRequest(Map<String, Object> input) {
         // Общая бизнес-логика для всех облаков
-        return "Hello from Lambda v2";
+        return "Hello from Lambda v2.0";
     }
 
     public String processRequest() {
