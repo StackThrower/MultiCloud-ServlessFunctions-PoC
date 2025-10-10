@@ -7,13 +7,36 @@
 - **Azure Functions**
 - **Google Cloud Functions**
 
+## Архитектура
+
+Проект использует **общий модуль** `CommonService` для бизнес-логики, который разделяется между всеми тремя облаками:
+
+```
+src/main/java/com/example/
+├── Handler.java          # AWS Lambda handler
+├── AzureHandler.java     # Azure Functions handler
+├── GcpHandler.java       # Google Cloud Functions handler
+└── service/
+    └── CommonService.java # Общая бизнес-логика для всех облаков
+```
+
+### Как это работает
+
+Каждый handler (AWS, Azure, GCP) инициализирует Spring Boot контекст и использует `CommonService` через dependency injection:
+
+- **CommonService** содержит общую бизнес-логику
+- Каждый handler адаптирует запрос/ответ под специфику своего облака
+- Spring Boot обеспечивает единообразное управление зависимостями
+
 ## Структура проекта
 
 ```
 ├── src/main/java/com/example/
 │   ├── Handler.java          # AWS Lambda handler
 │   ├── AzureHandler.java     # Azure Functions handler
-│   └── GcpHandler.java       # Google Cloud Functions handler
+│   ├── GcpHandler.java       # Google Cloud Functions handler
+│   └── service/
+│       └── CommonService.java # Общая бизнес-логика
 ├── terraform/
 │   ├── aws/main.tf           # Terraform для AWS
 │   ├── azure/main.tf         # Terraform для Azure
@@ -41,6 +64,22 @@ mvn clean package -DskipTests -Pgcp
 ```
 
 Собранный jar-файл будет находиться в `target/lambda-service.jar`.
+
+## Добавление бизнес-логики
+
+Чтобы добавить новую бизнес-логику, редактируйте **только** класс `CommonService.java`:
+
+```java
+@Service
+public class CommonService {
+    public String processRequest(Map<String, Object> input) {
+        // Ваша бизнес-логика здесь
+        return "Hello from Lambda";
+    }
+}
+```
+
+Изменения автоматически применятся ко всем трём облакам! 🎉
 
 ## Деплой через Terraform
 
@@ -149,16 +188,19 @@ Workflow автоматически:
 - **Handler**: `com.example.Handler::handleRequest`
 - **Runtime**: `java17`
 - **Формат**: Использует AWS Lambda API (`RequestHandler`)
+- **Вызов**: `commonService.processRequest(input)`
 
 ### Azure Functions
 - **Handler**: `com.example.AzureHandler`
 - **Runtime**: Java 17 на Linux
 - **Формат**: Использует Azure Functions API (`HttpRequestMessage`, `ExecutionContext`)
+- **Вызов**: `commonService.processRequest()`
 
 ### Google Cloud Functions
 - **Entry Point**: `com.example.GcpHandler`
 - **Runtime**: `java17`
 - **Формат**: Использует Google Cloud Functions API (`HttpFunction`)
+- **Вызов**: `commonService.processRequest()`
 
 ## Кастомизация
 
@@ -173,6 +215,29 @@ Workflow автоматически:
 ### Добавление зависимостей
 
 Добавьте зависимости в `pom.xml` в секцию `<dependencies>`.
+
+### Добавление Spring Boot сервисов
+
+Создавайте новые сервисы в пакете `com.example.service` и используйте их в `CommonService`:
+
+```java
+@Service
+public class MyNewService {
+    public String doSomething() {
+        return "Result";
+    }
+}
+
+@Service
+public class CommonService {
+    @Autowired
+    private MyNewService myNewService;
+    
+    public String processRequest(Map<String, Object> input) {
+        return myNewService.doSomething();
+    }
+}
+```
 
 ## Удаление ресурсов
 
@@ -195,6 +260,9 @@ terraform destroy
 - AWS: CloudWatch Logs
 - Azure: Application Insights / Log Stream
 - GCP: Cloud Logging
+
+### Проблема: Spring Boot контекст не инициализируется
+**Решение**: Убедитесь, что все классы находятся в пакете `com.example` или его подпакетах.
 
 ## Дополнительная информация
 
