@@ -21,8 +21,8 @@ resource "azurerm_app_service_plan" "lambda_plan" {
   resource_group_name = azurerm_resource_group.lambda_rg.name
   kind                = "FunctionApp"
   sku {
-    tier = "Dynamic"
-    size = "Y1"
+    tier = "Basic"
+    size = "B1"
   }
 }
 
