@@ -4,7 +4,7 @@ provider "azurerm" {
 
 resource "azurerm_resource_group" "lambda_rg" {
   name     = var.resource_group_name
-  location = "West Europe"
+  location = var.location
 }
 
 resource "azurerm_storage_account" "lambda_sa" {
@@ -16,18 +16,18 @@ resource "azurerm_storage_account" "lambda_sa" {
 }
 
 resource "azurerm_app_service_plan" "lambda_plan" {
-  name                = var.app_service_plan_name
+  name                = "plan{random_string.suffix.result}"
   location            = azurerm_resource_group.lambda_rg.location
   resource_group_name = azurerm_resource_group.lambda_rg.name
   kind                = "FunctionApp"
   sku {
-    tier = "Dynamic"
-    size = "Y1"
+    tier = "Free"
+    size = "F1"
   }
 }
 
 resource "azurerm_function_app" "lambda_func" {
-  name                       = var.function_app_name
+  name                       = "function${random_string.suffix.result}"
   location                   = azurerm_resource_group.lambda_rg.location
   resource_group_name        = azurerm_resource_group.lambda_rg.name
   app_service_plan_id        = azurerm_app_service_plan.lambda_plan.id
