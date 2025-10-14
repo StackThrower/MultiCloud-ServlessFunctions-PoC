@@ -4,7 +4,7 @@ provider "azurerm" {
 
 resource "azurerm_resource_group" "lambda_rg" {
   name     = var.resource_group_name
-  location = var.location
+  location = "West Europe"
 }
 
 resource "azurerm_storage_account" "lambda_sa" {
@@ -51,7 +51,7 @@ resource "random_string" "suffix" {
 }
 
 variable "resource_group_name" { default = "lambda-rg" }
-variable "location" { default = "East US 2" }
+variable "location" { default = "West Europe" }
 variable "storage_account_name" { default = "lambdasa123456" }
 variable "app_service_plan_name" { default = "lambda-plan" }
 variable "function_app_name" { default = "lambda-function-app" }
