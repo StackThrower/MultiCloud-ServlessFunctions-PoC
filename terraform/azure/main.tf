@@ -46,7 +46,7 @@ resource "azurerm_function_app" "lambda_func" {
 }
 
 variable "resource_group_name" { default = "lambda-rg" }
-variable "location" { default = "East US" }
+variable "location" { default = "West Europe" }
 variable "storage_account_name" { default = "lambdasa123456" }
 variable "app_service_plan_name" { default = "lambda-plan" }
 variable "function_app_name" { default = "lambda-function-app" }
