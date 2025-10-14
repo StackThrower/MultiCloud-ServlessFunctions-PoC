@@ -8,7 +8,7 @@ resource "azurerm_resource_group" "lambda_rg" {
 }
 
 resource "azurerm_storage_account" "lambda_sa" {
-  name                     = var.storage_account_name
+  name                     = "lambda${random_string.suffix.result}"
   resource_group_name      = azurerm_resource_group.lambda_rg.name
   location                 = azurerm_resource_group.lambda_rg.location
   account_tier             = "Standard"
@@ -43,6 +43,11 @@ resource "azurerm_function_app" "lambda_func" {
     "SPRING_PROFILES_ACTIVE"   = "lambda"
     "WEBSITE_RUN_FROM_PACKAGE" = var.package_path
   }
+}
+
+resource "random_string" "suffix" {
+  length  = 6
+  special = false
 }
 
 variable "resource_group_name" { default = "lambda-rg" }
