@@ -1,9 +1,6 @@
 name: Deploy Lambda PoC
 
 on:
-  push:
-    branches: [ master ]
-
   workflow_dispatch:
     inputs:
       cloud:
