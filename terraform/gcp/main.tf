@@ -3,6 +3,16 @@ provider "google" {
   region  = var.region
 }
 
+resource "null_resource" "create_zip" {
+  triggers = {
+    jar_hash = filemd5("${path.module}/../../target/lambda-service.jar")
+  }
+
+  provisioner "local-exec" {
+    command = "cd ${path.module}/../../target && zip -j lambda-service.zip lambda-service.jar"
+  }
+}
+
 resource "google_storage_bucket" "lambda_bucket" {
   name     = var.bucket_name
   location = var.region
@@ -12,6 +22,8 @@ resource "google_storage_bucket_object" "lambda_zip" {
   name   = "lambda-service.zip"
   bucket = google_storage_bucket.lambda_bucket.name
   source = var.zip_path
+
+  depends_on = [null_resource.create_zip]
 }
 
 resource "google_cloudfunctions_function" "lambda_func" {
