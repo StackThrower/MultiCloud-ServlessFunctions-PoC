@@ -8,10 +8,10 @@ resource "google_storage_bucket" "lambda_bucket" {
   location = var.region
 }
 
-resource "google_storage_bucket_object" "lambda_jar" {
-  name   = "lambda-service.jar"
+resource "google_storage_bucket_object" "lambda_zip" {
+  name   = "lambda-service.zip"
   bucket = google_storage_bucket.lambda_bucket.name
-  source = var.jar_path
+  source = var.zip_path
 }
 
 resource "google_cloudfunctions_function" "lambda_func" {
@@ -23,7 +23,7 @@ resource "google_cloudfunctions_function" "lambda_func" {
   available_memory_mb   = var.memory_size
   timeout     = var.timeout
   source_archive_bucket = google_storage_bucket.lambda_bucket.name
-  source_archive_object = google_storage_bucket_object.lambda_jar.name
+  source_archive_object = google_storage_bucket_object.lambda_zip.name
   environment_variables = var.environment_variables
   trigger_http = true
 }
@@ -31,7 +31,7 @@ resource "google_cloudfunctions_function" "lambda_func" {
 variable "project" {default = "multicloudfunction-475213"}
 variable "region" { default = "us-central1" }
 variable "bucket_name" { default = "lambda-poc-bucket-123456" }
-variable "jar_path" { default = "../../target/lambda-service.jar" }
+variable "zip_path" { default = "../../target/lambda-service.zip" }
 variable "function_name" { default = "lambda-service" }
 variable "entry_point" { default = "com.example.GcpHandler" }
 variable "memory_size" { default = 512 }

@@ -24,6 +24,16 @@ if [ -f "target/lambda-service.jar" ]; then
     echo "JAR file created: target/lambda-service.jar"
     echo "Size: $(du -h target/lambda-service.jar | cut -f1)"
     echo ""
+    echo "Creating ZIP for GCP deployment..."
+    echo "======================"
+
+    # Create lambda-service.zip containing lambda-service.jar at the root
+    cd target
+    zip -j lambda-service.zip lambda-service.jar
+    cd ..
+    echo "ZIP file created: target/lambda-service.zip"
+    echo "Size: $(du -h target/lambda-service.zip | cut -f1)"
+    echo ""
     echo "Preparing Terraform..."
     echo "======================"
 
