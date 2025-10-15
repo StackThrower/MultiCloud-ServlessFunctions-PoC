@@ -28,7 +28,7 @@ resource "google_cloudfunctions_function" "lambda_func" {
   trigger_http = true
 }
 
-variable "project" {}
+variable "project" {default = "multicloudfunction-475213"}
 variable "region" { default = "us-central1" }
 variable "bucket_name" { default = "lambda-poc-bucket-123456" }
 variable "jar_path" { default = "../../target/lambda-service.jar" }
