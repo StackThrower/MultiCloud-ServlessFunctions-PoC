@@ -75,4 +75,3 @@ class AzureHandlerTest {
         assertEquals(logger, actualLogger);
     }
 }
-

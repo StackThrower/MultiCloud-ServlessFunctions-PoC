@@ -66,5 +66,3 @@ class GcpHandlerTest {
         assertNotNull(response);
     }
 }
-
-
